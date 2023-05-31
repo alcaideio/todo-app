@@ -20,13 +20,13 @@ const INITIAL_TODOS = JSON.parse(localStorage.getItem('todos') || "") || []
 
 function todosSignalFactory(route = inject(ActivatedRoute)) {
     const todos = signal<Todo[]>(INITIAL_TODOS);
-    const filterParam = toSignal(route.params.pipe(map((params) => params['filter'])));
+    const filterQueryParam = toSignal(route.queryParams.pipe(map((q) => q['filter'])));
     const hasTodos = computed(() => todos().length > 0);
     const hasCompletedTodos = computed(() => todos().some((todo) => todo.completed));
     const incompleteTodosCount = computed(() => todos().filter((todo) => !todo.completed).length);
 
     const filteredTodos = computed(() => {
-        switch (filterParam()) {
+        switch (filterQueryParam()) {
             default:
             case TodoFilter.ALL:
                 return todos();
@@ -46,7 +46,7 @@ function todosSignalFactory(route = inject(ActivatedRoute)) {
     })
 
     return {
-        filterParam,
+        filterQueryParam,
         filteredTodos,
         hasTodos,
         hasCompletedTodos,

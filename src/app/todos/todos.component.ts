@@ -23,7 +23,7 @@ import { TODOS_STORE, provideTodosStore } from './todos.signal';
             *ngIf="todosStore.hasTodos()"
             [hasCompletedTodos]="todosStore.hasCompletedTodos()"
             [incompleteTodosCount]="todosStore.incompleteTodosCount()"
-            [currentFilter]="todosStore.filterParam()"
+            [currentFilter]="todosStore.filterQueryParam()"
             (clearCompleted)="todosStore.clearComplete()"
         />
     `,
