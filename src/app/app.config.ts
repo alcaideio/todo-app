@@ -1,9 +1,11 @@
 import { provideHttpClient } from '@angular/common/http';
 import { ApplicationConfig } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withPreloading } from '@angular/router';
 
+import { QuicklinkStrategy } from 'ngx-quicklink';
 import { routes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideRouter(routes), provideHttpClient()]
+  // withPreloading(PreloadAllModules)
+  providers: [provideRouter(routes, withPreloading(QuicklinkStrategy)), provideHttpClient()]
 };

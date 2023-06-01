@@ -1,11 +1,19 @@
 import { Component } from "@angular/core";
-import { RouterOutlet } from "@angular/router";
+import { RouterLink, RouterOutlet } from "@angular/router";
+import { QuicklinkModule } from "ngx-quicklink";
 
 @Component({
   selector: "app-root",
   standalone: true,
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, RouterLink, QuicklinkModule],
   template: `
+  <nav>
+    <ul>
+      <li><a routerLink="/todos">todos</a></li>
+      <li><a routerLink="/a">Route A</a></li>
+      <li><a routerLink="/b">Route B</a></li>
+    </ul>
+  </nav>
     <section class="todoapp">
       <router-outlet></router-outlet>
     </section>

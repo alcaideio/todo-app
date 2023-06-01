@@ -17,6 +17,7 @@
     "@angular/platform-browser": "^16.0.0",
     "@angular/platform-browser-dynamic": "^16.0.0",
     "@angular/router": "^16.0.0",
+    "ngx-quicklink": "^0.4.2",
     "rxjs": "~7.8.0",
     "todomvc-app-css": "^2.4.2",
     "todomvc-common": "^1.0.5",
