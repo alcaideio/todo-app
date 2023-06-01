@@ -31,6 +31,6 @@ import { TODOS_STORE, provideTodosStore } from './todos.signal';
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [NgIf, NewTodoComponent, TodoListComponent, TodoFooterComponent],
 })
-export default class TodosComponent {
+export default class TodosComponent  {
     readonly todosStore = inject(TODOS_STORE);
 }

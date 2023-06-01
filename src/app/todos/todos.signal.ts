@@ -1,4 +1,5 @@
-import { computed, effect, inject, InjectionToken, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { ChangeDetectorRef, InjectionToken, computed, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { map } from 'rxjs';
@@ -18,7 +19,7 @@ export interface Todo {
 
 const INITIAL_TODOS = JSON.parse(localStorage.getItem('todos') || "") || []
 
-function todosSignalFactory(route = inject(ActivatedRoute)) {
+function todosSignalFactory(route = inject(ActivatedRoute), http = inject(HttpClient), cdr = inject(ChangeDetectorRef)) {
     const todos = signal<Todo[]>(INITIAL_TODOS);
     const filterQueryParam = toSignal(route.queryParams.pipe(map((q) => q['filter'])));
     const hasTodos = computed(() => todos().length > 0);
@@ -37,14 +38,17 @@ function todosSignalFactory(route = inject(ActivatedRoute)) {
         }
     });
 
-    effect(async () => {
+    // NOTES: we can do it with async await and fetch
+    const fetchTodos$ = () => http.get<Todo[]>('assets/todos.json')
+
+    effect(() => {
         if(todos().length) {
-            localStorage.setItem('todos', JSON.stringify(todos()));
+            localStorage.setItem('todos', JSON.stringify(todos()))
         } else {
-            localStorage.setItem('todos', JSON.stringify(await fetch('assets/todos.json').then((res) => res.json())));
+            fetchTodos$().subscribe(resp => todos.set(resp))
         }
     })
-
+    
     return {
         filterQueryParam,
         filteredTodos,
