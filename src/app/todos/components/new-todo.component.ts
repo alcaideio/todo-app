@@ -8,7 +8,6 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Output } from '@angul
             id="new-todo"
             class="new-todo"
             type="text"
-            autofocus
             placeholder="What needs to be done?"
             #textInput
             (keyup.enter)="newTodo(textInput.value); textInput.value = ''"

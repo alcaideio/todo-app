@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { ChangeDetectorRef, InjectionToken, computed, effect, inject, signal } from '@angular/core';
+import { InjectionToken, computed, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { map } from 'rxjs';
@@ -19,7 +19,7 @@ export interface Todo {
 
 const INITIAL_TODOS = JSON.parse(localStorage.getItem('todos') || "") || []
 
-function todosSignalFactory(route = inject(ActivatedRoute), http = inject(HttpClient), cdr = inject(ChangeDetectorRef)) {
+function todosSignalFactory(route = inject(ActivatedRoute), http = inject(HttpClient)) {
     const todos = signal<Todo[]>(INITIAL_TODOS);
     const filterQueryParam = toSignal(route.queryParams.pipe(map((q) => q['filter'])));
     const hasTodos = computed(() => todos().length > 0);

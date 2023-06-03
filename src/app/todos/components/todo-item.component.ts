@@ -20,10 +20,11 @@ import { Todo } from "../todos.signal";
           [checked]="todo.completed"
           (click)="toggle.emit(todo.id)"
         />
+        <!-- eslint-disable-next-line -->
         <label (dblclick)="onDblClick(textInput)">
           {{ todo.text }}
         </label>
-        <button class="destroy" (click)="delete.emit(todo.id)"></button>
+        <button class="destroy" (click)="delete.emit(todo.id)"> </button>
       </div>
       <input
         class="edit"
@@ -37,6 +38,11 @@ import { Todo } from "../todos.signal";
     </li>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: [`
+  .toggle, .destroy {
+    cursor: pointer;
+  }
+  `]
 })
 export class TodoItemComponent {
   @Input({ required: true }) todo!: Todo;
