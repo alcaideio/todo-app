@@ -1,6 +1,6 @@
-import { Routes } from "@angular/router";
-import TodosComponent from "./todos.component";
+import { Routes } from '@angular/router';
+import TodosComponent from './todos.component';
 
-const routes: Routes = [{ path: '', loadComponent: () => TodosComponent}]
+const routes: Routes = [{ path: '', loadComponent: () => TodosComponent }];
 
-export default routes
+export default routes;

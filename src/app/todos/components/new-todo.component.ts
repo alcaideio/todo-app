@@ -1,26 +1,25 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Output } from '@angular/core';
 
 @Component({
-  selector: 'app-new-todo',
-  standalone: true,
-  template: `
-       <input
-            id="new-todo"
-            class="new-todo"
-            type="text"
-            placeholder="What needs to be done?"
-            #textInput
-            (keyup.enter)="newTodo(textInput.value); textInput.value = ''"
-        />
-  `,
-  changeDetection: ChangeDetectionStrategy.OnPush
+   selector: 'app-new-todo',
+   standalone: true,
+   template: `
+      <input
+         id="new-todo"
+         class="new-todo"
+         type="text"
+         placeholder="What needs to be done?"
+         #textInput
+         (keyup.enter)="newTodo(textInput.value); textInput.value = ''" />
+   `,
+   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NewTodoComponent {
-  @Output() addTodo = new EventEmitter<string>()
+   @Output() addTodo = new EventEmitter<string>();
 
-  newTodo(text: string) {
-    if(text && text.trim()) {
-      this.addTodo.emit(text.trim())
-    }
-  }
+   newTodo(text: string) {
+      if (text && text.trim()) {
+         this.addTodo.emit(text.trim());
+      }
+   }
 }
