@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { InjectionToken, computed, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
-import { map, tap } from 'rxjs';
+import { map } from 'rxjs';
 
 export interface Todo {
    id: string;
@@ -20,7 +20,7 @@ export enum TodoFilter {
 const INITIAL_TODOS = JSON.parse(localStorage.getItem('todos') || '') || [];
 
 function todosSignalFactory(route = inject(ActivatedRoute), http = inject(HttpClient)) {
-   const todosSignal = signal<Todo[]>(INITIAL_TODOS);
+   const todosSignal = signal<Todo[]>([]);
    const hasTodos = computed(() => todosSignal().length > 0);
    const hasCompletedTodos = computed(() => todosSignal().some(todo => todo.completed));
    const incompleteTodosCount = computed(
@@ -28,35 +28,29 @@ function todosSignalFactory(route = inject(ActivatedRoute), http = inject(HttpCl
    );
    const completedQueryParam = toSignal(route.queryParams.pipe(map(q => q['completed'])));
 
-   const sortByDateQueryParam = toSignal(
-      route.queryParams.pipe(
-         map(q => q['sortByDate']),
-         tap(console.log)
-      )
-   );
+   const sortByDateQueryParam = toSignal(route.queryParams.pipe(map(q => q['sortByDate'])));
 
-   // NOTES : bug report signal, computed property dont manage Date
+   const filteredTodos = computed(() => {
+      switch (completedQueryParam()) {
+         default:
+         case TodoFilter.ALL:
+            return todosSignal();
+         case TodoFilter.ACTIVE:
+            return todosSignal().filter(todo => !todo.completed);
+         case TodoFilter.COMPLETED:
+            return todosSignal().filter(todo => todo.completed);
+      }
+   });
+
    const todos = computed(() => {
       switch (sortByDateQueryParam()) {
          default:
          case 'asc':
-            return todosSignal().sort((a, b) => b.creationDate - a.creationDate);
+            return filteredTodos().sort((a, b) => b.creationDate - a.creationDate);
          case 'desc':
-            return todosSignal().sort((a, b) => a.creationDate - b.creationDate);
+            return filteredTodos().sort((a, b) => a.creationDate - b.creationDate);
       }
    });
-
-   // const todos = computed(() => {
-   //    switch (completedQueryParam()) {
-   //       default:
-   //       case TodoFilter.ALL:
-   //          return sortedTodos();
-   //       case TodoFilter.ACTIVE:
-   //          return sortedTodos().filter(todo => !todo.completed);
-   //       case TodoFilter.COMPLETED:
-   //          return sortedTodos().filter(todo => todo.completed);
-   //    }
-   // });
 
    // NOTES: we can do it with async await and fetch
    const fetchTodos$ = () => http.get<Todo[]>('assets/todos.json');
