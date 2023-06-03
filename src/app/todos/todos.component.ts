@@ -14,7 +14,7 @@ import { TODOS_STORE, provideTodosStore } from './todos.signal';
       </header>
       <app-todo-list
          *ngIf="todosStore.hasTodos()"
-         [todos]="todosStore.filteredTodos()"
+         [todos]="todosStore.todos()"
          (toggle)="todosStore.toggle($event)"
          (update)="todosStore.update($event.id, $event.text)"
          (delete)="todosStore.delete($event)" />
@@ -22,7 +22,7 @@ import { TODOS_STORE, provideTodosStore } from './todos.signal';
          *ngIf="todosStore.hasTodos()"
          [hasCompletedTodos]="todosStore.hasCompletedTodos()"
          [incompleteTodosCount]="todosStore.incompleteTodosCount()"
-         [currentFilter]="todosStore.filterQueryParam()"
+         [currentFilter]="todosStore.completedQueryParam()"
          (clearCompleted)="todosStore.clearComplete()" />
    `,
    providers: [provideTodosStore()],

@@ -2,55 +2,76 @@ import { HttpClient } from '@angular/common/http';
 import { InjectionToken, computed, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
-import { map } from 'rxjs';
+import { map, tap } from 'rxjs';
 
 export interface Todo {
    id: string;
    text: string;
-   creationDate: Date;
+   creationDate: number;
    completed: boolean;
 }
 
 export enum TodoFilter {
    ALL = 'all',
-   ACTIVE = 'active',
-   COMPLETED = 'completed',
+   ACTIVE = 'false',
+   COMPLETED = 'true',
 }
 
 const INITIAL_TODOS = JSON.parse(localStorage.getItem('todos') || '') || [];
 
 function todosSignalFactory(route = inject(ActivatedRoute), http = inject(HttpClient)) {
-   const todos = signal<Todo[]>(INITIAL_TODOS);
-   const filterQueryParam = toSignal(route.queryParams.pipe(map(q => q['filter'])));
-   const hasTodos = computed(() => todos().length > 0);
-   const hasCompletedTodos = computed(() => todos().some(todo => todo.completed));
-   const incompleteTodosCount = computed(() => todos().filter(todo => !todo.completed).length);
+   const todosSignal = signal<Todo[]>(INITIAL_TODOS);
+   const hasTodos = computed(() => todosSignal().length > 0);
+   const hasCompletedTodos = computed(() => todosSignal().some(todo => todo.completed));
+   const incompleteTodosCount = computed(
+      () => todosSignal().filter(todo => !todo.completed).length
+   );
+   const completedQueryParam = toSignal(route.queryParams.pipe(map(q => q['completed'])));
 
-   const filteredTodos = computed(() => {
-      switch (filterQueryParam()) {
+   const sortByDateQueryParam = toSignal(
+      route.queryParams.pipe(
+         map(q => q['sortByDate']),
+         tap(console.log)
+      )
+   );
+
+   // NOTES : bug report signal, computed property dont manage Date
+   const todos = computed(() => {
+      switch (sortByDateQueryParam()) {
          default:
-         case TodoFilter.ALL:
-            return todos();
-         case TodoFilter.ACTIVE:
-            return todos().filter(todo => !todo.completed);
-         case TodoFilter.COMPLETED:
-            return todos().filter(todo => todo.completed);
+         case 'asc':
+            return todosSignal().sort((a, b) => b.creationDate - a.creationDate);
+         case 'desc':
+            return todosSignal().sort((a, b) => a.creationDate - b.creationDate);
       }
    });
+
+   // const todos = computed(() => {
+   //    switch (completedQueryParam()) {
+   //       default:
+   //       case TodoFilter.ALL:
+   //          return sortedTodos();
+   //       case TodoFilter.ACTIVE:
+   //          return sortedTodos().filter(todo => !todo.completed);
+   //       case TodoFilter.COMPLETED:
+   //          return sortedTodos().filter(todo => todo.completed);
+   //    }
+   // });
+
    // NOTES: we can do it with async await and fetch
    const fetchTodos$ = () => http.get<Todo[]>('assets/todos.json');
 
    effect(() => {
-      if (todos().length) {
-         localStorage.setItem('todos', JSON.stringify(todos()));
+      if (todosSignal().length) {
+         localStorage.setItem('todos', JSON.stringify(todosSignal()));
       } else {
-         fetchTodos$().subscribe(resp => todos.set(resp));
+         fetchTodos$().subscribe(resp => todosSignal.set(resp));
       }
    });
 
    return {
-      filterQueryParam,
-      filteredTodos,
+      completedQueryParam,
+      todos,
       hasTodos,
       hasCompletedTodos,
       incompleteTodosCount,
@@ -58,31 +79,31 @@ function todosSignalFactory(route = inject(ActivatedRoute), http = inject(HttpCl
          const newTodo = {
             id: Math.random().toString(32).slice(2),
             text,
-            creationDate: new Date(),
+            creationDate: new Date().getTime(),
             completed: false,
          };
 
-         todos.update(v => [...v, newTodo]);
+         todosSignal.update(v => [...v, newTodo]);
       },
       toggle: (id: string) => {
-         todos.mutate(v => {
+         todosSignal.mutate(v => {
             const todo = v.find(todo => todo.id === id);
 
             if (todo) todo.completed = !todo.completed;
          });
       },
       delete: (id: string) => {
-         todos.update(v => v.filter(todo => todo.id !== id));
+         todosSignal.update(v => v.filter(todo => todo.id !== id));
       },
       update: (id: string, text: string) => {
-         todos.mutate(v => {
+         todosSignal.mutate(v => {
             const todo = v.find(todo => todo.id === id);
 
             if (todo) todo.text = text;
          });
       },
       clearComplete: () => {
-         todos.update(v => v.filter(todo => !todo.completed));
+         todosSignal.update(v => v.filter(todo => !todo.completed));
       },
    };
 }

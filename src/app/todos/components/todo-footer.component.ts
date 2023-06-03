@@ -16,16 +16,16 @@ import { TodoFilter } from '../todos.signal';
             <li>
                <a
                   routerLink="/"
-                  [queryParams]="{ filter: 'active' }"
-                  [class.selected]="currentFilter === 'active'"
+                  [queryParams]="{ completed: 'false' }"
+                  [class.selected]="currentFilter === 'false'"
                   >Active</a
                >
             </li>
             <li>
                <a
                   routerLink="/"
-                  [queryParams]="{ filter: 'completed' }"
-                  [class.selected]="currentFilter === 'completed'"
+                  [queryParams]="{ completed: 'true' }"
+                  [class.selected]="currentFilter === 'true'"
                   >Completed</a
                >
             </li>
