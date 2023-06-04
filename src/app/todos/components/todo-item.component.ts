@@ -39,6 +39,10 @@ import { Todo } from '../todos.signal';
    changeDetection: ChangeDetectionStrategy.OnPush,
    styles: [
       `
+         :host {
+            display: block;
+         }
+
          .toggle,
          .destroy {
             cursor: pointer;

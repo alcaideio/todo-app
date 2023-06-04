@@ -12,7 +12,6 @@ export interface Todo {
 }
 
 export enum TodoFilter {
-   ALL = 'all',
    ACTIVE = 'false',
    COMPLETED = 'true',
 }
@@ -20,7 +19,7 @@ export enum TodoFilter {
 const INITIAL_TODOS = JSON.parse(localStorage.getItem('todos') || '') || [];
 
 function todosSignalFactory(route = inject(ActivatedRoute), http = inject(HttpClient)) {
-   const todosSignal = signal<Todo[]>([]);
+   const todosSignal = signal<Todo[]>(INITIAL_TODOS);
    const hasTodos = computed(() => todosSignal().length > 0);
    const hasCompletedTodos = computed(() => todosSignal().some(todo => todo.completed));
    const incompleteTodosCount = computed(
@@ -32,13 +31,12 @@ function todosSignalFactory(route = inject(ActivatedRoute), http = inject(HttpCl
 
    const filteredTodos = computed(() => {
       switch (completedQueryParam()) {
-         default:
-         case TodoFilter.ALL:
-            return todosSignal();
          case TodoFilter.ACTIVE:
             return todosSignal().filter(todo => !todo.completed);
          case TodoFilter.COMPLETED:
             return todosSignal().filter(todo => todo.completed);
+         default:
+            return todosSignal();
       }
    });
 
