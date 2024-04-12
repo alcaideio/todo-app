@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
-import { InjectionToken, computed, effect, inject, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { InjectionToken, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
-import { map } from 'rxjs';
+import { map, tap } from 'rxjs';
 
 export interface Todo {
    id: string;
@@ -16,31 +16,26 @@ export enum TodoFilter {
    COMPLETED = 'true',
 }
 
-const INITIAL_TODOS = JSON.parse(localStorage.getItem('todos') || '') || [];
-
-function todosSignalFactory(route = inject(ActivatedRoute), http = inject(HttpClient)) {
-   const todosSignal = signal<Todo[]>(INITIAL_TODOS);
-   const hasTodos = computed(() => todosSignal().length > 0);
-   const hasCompletedTodos = computed(() => todosSignal().some(todo => todo.completed));
-   const incompleteTodosCount = computed(
-      () => todosSignal().filter(todo => !todo.completed).length
-   );
+function todosFactory(route = inject(ActivatedRoute), http = inject(HttpClient)) {
+   const todos = signal<Todo[]>([]);
+   const hasTodos = computed(() => todos().length > 0);
+   const hasCompletedTodos = computed(() => todos().some(todo => todo.completed));
+   const incompleteTodosCount = computed(() => todos().filter(todo => !todo.completed).length);
    const completedQueryParam = toSignal(route.queryParams.pipe(map(q => q['completed'])));
-
    const sortByDateQueryParam = toSignal(route.queryParams.pipe(map(q => q['sortByDate'])));
 
    const filteredTodos = computed(() => {
       switch (completedQueryParam()) {
          case TodoFilter.ACTIVE:
-            return todosSignal().filter(todo => !todo.completed);
+            return todos().filter(todo => !todo.completed);
          case TodoFilter.COMPLETED:
-            return todosSignal().filter(todo => todo.completed);
+            return todos().filter(todo => todo.completed);
          default:
-            return todosSignal();
+            return todos();
       }
    });
 
-   const todos = computed(() => {
+   const _todos = computed(() => {
       switch (sortByDateQueryParam()) {
          default:
          case 'asc':
@@ -50,20 +45,14 @@ function todosSignalFactory(route = inject(ActivatedRoute), http = inject(HttpCl
       }
    });
 
-   // NOTES: we can do it with async await and fetch
-   const fetchTodos$ = () => http.get<Todo[]>('assets/todos.json');
-
-   effect(() => {
-      if (todosSignal().length) {
-         localStorage.setItem('todos', JSON.stringify(todosSignal()));
-      } else {
-         fetchTodos$().subscribe(resp => todosSignal.set(resp));
-      }
-   });
+   http
+      .get<Todo[]>('assets/todos.json')
+      .pipe(tap(console.log), takeUntilDestroyed())
+      .subscribe(resp => todos.set(resp));
 
    return {
       completedQueryParam,
-      todos,
+      todos: _todos,
       hasTodos,
       hasCompletedTodos,
       incompleteTodosCount,
@@ -75,35 +64,35 @@ function todosSignalFactory(route = inject(ActivatedRoute), http = inject(HttpCl
             completed: false,
          };
 
-         todosSignal.update(v => [...v, newTodo]);
+         todos.update(v => [...v, newTodo]);
       },
       toggle: (id: string) => {
-         todosSignal.mutate(v => {
+         todos.mutate(v => {
             const todo = v.find(todo => todo.id === id);
 
             if (todo) todo.completed = !todo.completed;
          });
       },
       delete: (id: string) => {
-         todosSignal.update(v => v.filter(todo => todo.id !== id));
+         todos.update(v => v.filter(todo => todo.id !== id));
       },
       update: (id: string, text: string) => {
-         todosSignal.mutate(v => {
+         todos.mutate(v => {
             const todo = v.find(todo => todo.id === id);
 
             if (todo) todo.text = text;
          });
       },
       clearComplete: () => {
-         todosSignal.update(v => v.filter(todo => !todo.completed));
+         todos.update(v => v.filter(todo => !todo.completed));
       },
    };
 }
 
-export const TODOS_STORE = new InjectionToken<ReturnType<typeof todosSignalFactory>>(
+export const TODOS_STORE = new InjectionToken<ReturnType<typeof todosFactory>>(
    'TodosStore with Signals'
 );
 
 export function provideTodosStore() {
-   return { provide: TODOS_STORE, useFactory: todosSignalFactory };
+   return { provide: TODOS_STORE, useFactory: todosFactory };
 }
